@@ -1,0 +1,86 @@
+{
+  "name": "interview-practice",
+  "version": "0.1.0",
+  "dependencies": {
+    "@types/react": "^16.9.41",
+    "@types/react-bootstrap": "latest",
+    "@types/react-dom": "^16.9.8",
+    "@types/react-router-dom": "^4.3.3",
+    "bootstrap": "^4.3.1",
+    "react": "^16.13.1",
+    "react-bootstrap": "latest",
+    "react-dom": "^16.13.1",
+    "react-router-dom": "^5.0.0",
+    "ts-lint": "^4.5.1",
+    "tslint": "^5.16.0",
+    "typescript": "latest",
+    "react-native-uuid": "latest",
+    "express": "latest",
+    "babel-loader": "^8.1.0",
+    "css-loader": "^4.0.0",
+    "html-webpack-plugin": "5.3.1",
+    "html-loader": "^2.1.2",
+    "style-loader": "^1.2.1",
+    "webpack": "latest",
+    "webpack-cli": "latest",
+    "@hookstate/core": "^3.0.7",
+    "process": "^0.11.10"
+  },
+  "scripts": {
+    "bundle": "webpack",
+    "start": "webpack serve --mode development",
+    "prod": "node server.js",
+    "build": "webpack --mode production",
+    "check-types": "tsc",
+    "lint": "tslint -c tslint.json 'src/**/*.ts'",
+    "lint-fix": "tslint -c tslint.json 'src/**/*.ts' --fix",
+    "test": "jest"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@babel/core": "^7.10.5",
+    "@babel/plugin-proposal-class-properties": "^7.10.4",
+    "@babel/plugin-proposal-object-rest-spread": "^7.10.4",
+    "@babel/plugin-transform-runtime": "^7.14.3",
+    "@babel/preset-env": "^7.10.4",
+    "@babel/preset-react": "^7.10.4",
+    "@babel/preset-typescript": "^7.10.4",
+    "@webpack-cli/serve": "^1.4.0",
+    "babel-loader": "^8.1.0",
+    "css-loader": "^4.0.0",
+    "eslint-plugin-react-hooks": "^1.6.0",
+    "html-webpack-plugin": "5.3.1",
+    "style-loader": "^1.2.1",
+    "webpack": "latest",
+    "webpack-cli": "latest",
+    "webpack-dev-server": "latest",
+    "jest": "^27.0.4"
+  },
+  "optionalDependencies": {
+    "fsevents": "^2.1.3"
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "js",
+      "jsx"
+    ],
+    "moduleDirectories": [
+      "node_modules",
+      "src"
+    ]
+  }
+}
