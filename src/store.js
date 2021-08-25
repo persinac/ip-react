@@ -4,6 +4,14 @@ const store = createState({
     sequence: [],
     fileName: "",
     recordingStatus: ""
-})
+});
 
-export default store
+// trying out different stores
+const cpStore = createState({
+    companyPriority: []
+});
+
+export {
+    store,
+    cpStore
+}

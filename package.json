@@ -6,6 +6,8 @@
     "@types/react-bootstrap": "latest",
     "@types/react-dom": "^16.9.8",
     "@types/react-router-dom": "^4.3.3",
+    "@types/styled-components": "^5.1.12",
+    "@types/react-table": "^7.7.2",
     "bootstrap": "^4.3.1",
     "react": "^16.13.1",
     "react-bootstrap": "latest",
@@ -24,7 +26,9 @@
     "webpack": "latest",
     "webpack-cli": "latest",
     "@hookstate/core": "^3.0.7",
-    "process": "^0.11.10"
+    "process": "^0.11.10",
+    "styled-components": "^5.3.1",
+    "react-table": "^7.7.0"
   },
   "scripts": {
     "bundle": "webpack",

@@ -1,6 +1,6 @@
 import React from "react";
 import {useState} from "@hookstate/core";
-import store from "../../store";
+import {store} from "../../store";
 import {CompanyPriorityListComponent} from "../CompanyPriorityList/CompanyPriorityListComponent";
 
 const HomeComponent = () => {

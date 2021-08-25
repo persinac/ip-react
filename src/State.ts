@@ -13,6 +13,12 @@ export interface QuestionValues {
 	[name: string]: string;
 }
 
+export interface CompanyPriority {
+	companyPriorityId: number;
+	company: string;
+	priority: number;
+}
+
 /***
  * Begin specific ERROR component grouping example
  ***/
