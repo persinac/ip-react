@@ -10,10 +10,11 @@ const useStyles = makeStyles(
   createStyles({
     columnsPopOver: {
       padding: 24,
+      height: 180
     },
-    filtersResetButton: {
+    addButton: {
       position: 'absolute',
-      top: 18,
+      bottom: 10,
       right: 21,
     },
     popoverTitle: {
@@ -128,11 +129,12 @@ export function AddCompanyPriorityPage<T extends Record<string, unknown>>({
             <Button
               variant="contained"
               color="primary"
+              className={classes.addButton}
               onClick={(e) => {
                 onSubmit2(e)
               }}
             >
-              Primary
+              Add
             </Button>
           </form>
         </div>
