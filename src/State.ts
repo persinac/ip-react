@@ -1,4 +1,5 @@
 import DateTimeFormat = Intl.DateTimeFormat;
+import {Person} from "./utils";
 
 export interface IAppState {
 	authUser: any;
@@ -13,10 +14,20 @@ export interface QuestionValues {
 	[name: string]: string;
 }
 
-export interface CompanyPriority {
-	companyPriorityId: number;
+export type CompanyPriority = {
+	companyPriorityId?: number;
 	company: string;
 	priority: number;
+	createdDatetime?: Date;
+	createdBy?: string;
+	modifiedDatetime?: Date;
+	modifiedBy?: string;
+	isActive?: boolean;
+
+}
+
+export type CompanyPriorityData = CompanyPriority & {
+	subRows?: CompanyPriority[]
 }
 
 /***

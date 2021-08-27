@@ -1,106 +1,252 @@
-import React from "react";
+import React, { useCallback } from 'react'
 import { useState } from "@hookstate/core";
 import { getCompanyPriorityList } from "../../APICalls/Interview/getCompanyPriorityList";
 import {cpStore} from "../../store";
+import { Button, CssBaseline, InputLabel, MenuItem, TextField } from '@material-ui/core'
+import { CellProps, FilterProps, FilterValue, IdType, Row, TableInstance } from 'react-table'
 
-import BTable from 'react-bootstrap/Table';
-import styled from "styled-components";
-import { useTable, useSortBy } from "react-table";
+import { Table } from '../General/Table'
+import { PersonData, makeData } from '../../utils'
+import {CompanyPriorityData} from "../../State";
 
-const Styles = styled.div`
-  padding: 1rem;
+// This is a custom aggregator that
+// takes in an array of values and
+// returns the rounded median
+function roundedMedian(values: any[]) {
+  let min = values[0] || ''
+  let max = values[0] || ''
 
-  table {
-    border-spacing: 0;
-    border: 1px solid black;
+  values.forEach((value) => {
+    min = Math.min(min, value)
+    max = Math.max(max, value)
+  })
 
-    tr {
-      :last-child {
-        td {
-          border-bottom: 0;
-        }
-      }
-    }
+  return Math.round((min + max) / 2)
+}
 
-    th,
-    td {
-      margin: 0;
-      padding: 0.5rem;
-      border-bottom: 1px solid black;
-      border-right: 1px solid black;
+function filterGreaterThan(rows: Array<Row<any>>, id: Array<IdType<any>>, filterValue: FilterValue) {
+  return rows.filter((row) => {
+    const rowValue = row.values[id[0]]
+    return rowValue >= filterValue
+  })
+}
 
-      :last-child {
-        border-right: 0;
-      }
-    }
-  }
-`
+// This is an autoRemove method on the filter function that
+// when given the new filter value and returns true, the filter
+// will be automatically removed. Normally this is just an undefined
+// check, but here, we want to remove the filter if it's not a number
+filterGreaterThan.autoRemove = (val: any) => typeof val !== 'number'
 
-// @ts-ignore
-const Table = ({columns, data}) => {
-  const {
-    getTableProps,
-    getTableBodyProps,
-    headerGroups,
-    rows,
-    prepareRow,
-  } = useTable(
-    {
-      columns,
-      data,
-    },
-    useSortBy
-  )
-
-  // We don't want to render all 2000 rows for this example, so cap
-  // it at 20 for this use case
-  const firstPageRows = rows.slice(0, 20)
+function SelectColumnFilter({
+                              column: { filterValue, render, setFilter, preFilteredRows, id },
+                            }: FilterProps<PersonData>) {
+  const options = React.useMemo(() => {
+    const options = new Set<any>()
+    preFilteredRows.forEach((row) => {
+      options.add(row.values[id])
+    })
+    return [...Array.from(options.values())]
+  }, [id, preFilteredRows])
 
   return (
+    <TextField
+      select
+      label={render('Header')}
+      value={filterValue || ''}
+      onChange={(e) => {
+        setFilter(e.target.value || undefined)
+      }}
+    >
+      <MenuItem value={''}>All</MenuItem>
+      {options.map((option, i) => (
+        <MenuItem key={i} value={option}>
+          {option}
+        </MenuItem>
+      ))}
+    </TextField>
+  )
+}
+
+const getMinMax = (rows: Row<PersonData>[], id: IdType<PersonData>) => {
+  let min = rows.length ? rows[0].values[id] : 0
+  let max = rows.length ? rows[0].values[id] : 0
+  rows.forEach((row) => {
+    min = Math.min(row.values[id], min)
+    max = Math.max(row.values[id], max)
+  })
+  return [min, max]
+}
+
+function SliderColumnFilter({
+                              column: { render, filterValue, setFilter, preFilteredRows, id },
+                            }: FilterProps<PersonData>) {
+  const [min, max] = React.useMemo(() => getMinMax(preFilteredRows, id), [id, preFilteredRows])
+
+  return (
+    <div
+      style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'baseline',
+      }}
+    >
+      <TextField
+        name={id}
+        label={render('Header')}
+        type='range'
+        inputProps={{
+          min,
+          max,
+        }}
+        value={filterValue || min}
+        onChange={(e) => {
+          setFilter(parseInt(e.target.value, 10))
+        }}
+      />
+      <Button variant='outlined' style={{ width: 60, height: 36 }} onClick={() => setFilter(undefined)}>
+        Off
+      </Button>
+    </div>
+  )
+}
+
+const useActiveElement = () => {
+  const [active, setActive] = React.useState(document.activeElement)
+
+  const handleFocusIn = () => {
+    setActive(document.activeElement)
+  }
+
+  React.useEffect(() => {
+    document.addEventListener('focusin', handleFocusIn)
+    return () => {
+      document.removeEventListener('focusin', handleFocusIn)
+    }
+  }, [])
+
+  return active
+}
+
+// This is a custom UI for our 'between' or number range
+// filter. It uses two number boxes and filters rows to
+// ones that have values between the two
+function NumberRangeColumnFilter({
+                                   column: { filterValue = [], render, preFilteredRows, setFilter, id },
+                                 }: FilterProps<PersonData>) {
+  const [min, max] = React.useMemo(() => getMinMax(preFilteredRows, id), [id, preFilteredRows])
+  const focusedElement = useActiveElement()
+  const hasFocus = focusedElement && (focusedElement.id === `${id}_1` || focusedElement.id === `${id}_2`)
+  return (
     <>
-      <BTable {...getTableProps()}>
-        <thead>
-        {headerGroups.map((headerGroup: any)=> (
-          <tr {...headerGroup.getHeaderGroupProps()}>
-            {headerGroup.headers.map((column: any) => (
-              // Add the sorting props to control sorting. For this example
-              // we can add them into the header props
-              <th {...column.getHeaderProps(column.getSortByToggleProps())}>
-                {column.render('Header')}
-                {/* Add a sort direction indicator */}
-                <span>
-                    {column.isSorted
-                      ? column.isSortedDesc
-                        ? ' 🔽'
-                        : ' 🔼'
-                      : ''}
-                  </span>
-              </th>
-            ))}
-          </tr>
-        ))}
-        </thead>
-        <tbody {...getTableBodyProps()}>
-        {firstPageRows.map(
-          (row: any, i: number) => {
-            prepareRow(row);
-            return (
-              <tr {...row.getRowProps()}>
-                {row.cells.map((cell: any) => {
-                  return (
-                    <td {...cell.getCellProps()}>{cell.render('Cell')}</td>
-                  )
-                })}
-              </tr>
-            )}
-        )}
-        </tbody>
-      </BTable>
-      <br />
-      <div>Showing the first 20 results of {rows.length} rows</div>
+      <InputLabel htmlFor={id} shrink focused={!!hasFocus}>
+        {render('Header')}
+      </InputLabel>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'baseline',
+          paddingTop: 5,
+        }}
+      >
+        <TextField
+          id={`${id}_1`}
+          value={filterValue[0] || ''}
+          type='number'
+          onChange={(e) => {
+            const val = e.target.value
+            setFilter((old: any[] = []) => [val ? parseInt(val, 10) : undefined, old[1]])
+          }}
+          placeholder={`Min (${min})`}
+          style={{
+            width: '70px',
+            marginRight: '0.5rem',
+          }}
+        />
+        to
+        <TextField
+          id={`${id}_2`}
+          value={filterValue[1] || ''}
+          type='number'
+          onChange={(e) => {
+            const val = e.target.value
+            setFilter((old: any[] = []) => [old[0], val ? parseInt(val, 10) : undefined])
+          }}
+          placeholder={`Max (${max})`}
+          style={{
+            width: '70px',
+            marginLeft: '0.5rem',
+          }}
+        />
+      </div>
     </>
   )
-};
+}
+
+const columns = [
+  {
+    Header: 'Name',
+    columns: [
+      {
+        Header: 'First Name',
+        accessor: 'firstName',
+        aggregate: 'count',
+        Aggregated: ({ cell: { value } }: CellProps<PersonData>) => `${value} Names`,
+      },
+      {
+        Header: 'Last Name',
+        accessor: 'lastName',
+        aggregate: 'uniqueCount',
+        filter: 'fuzzyText',
+        Aggregated: ({ cell: { value } }: CellProps<PersonData>) => `${value} Unique Names`,
+      },
+    ],
+  },
+  {
+    Header: 'Info',
+    columns: [
+      {
+        Header: 'Age',
+        accessor: 'age',
+        width: 50,
+        minWidth: 50,
+        align: 'right',
+        Filter: SliderColumnFilter,
+        filter: 'equals',
+        aggregate: 'average',
+        disableGroupBy: true,
+        defaultCanSort: false,
+        disableSortBy: false,
+        Aggregated: ({ cell: { value } }: CellProps<PersonData>) => `${value} (avg)`,
+      },
+      {
+        Header: 'Visits',
+        accessor: 'visits',
+        width: 50,
+        minWidth: 50,
+        align: 'right',
+        Filter: NumberRangeColumnFilter,
+        filter: 'between',
+        aggregate: 'sum',
+        Aggregated: ({ cell: { value } }: CellProps<PersonData>) => `${value} (total)`,
+      },
+      {
+        Header: 'Status',
+        accessor: 'status',
+        Filter: SelectColumnFilter,
+        filter: 'includes',
+      },
+      {
+        Header: 'Profile Progress',
+        accessor: 'progress',
+        Filter: SliderColumnFilter,
+        filter: filterGreaterThan,
+        aggregate: roundedMedian,
+        Aggregated: ({ cell: { value } }: CellProps<PersonData>) => `${value} (med)`,
+      },
+    ],
+  },
+]
 
 export const CompanyPriorityListComponent = () => {
   const { companyPriority } = useState(cpStore);
@@ -109,30 +255,32 @@ export const CompanyPriorityListComponent = () => {
       return r.json();
     })
     .then((data) => {
-      console.log(data);
       companyPriority.set(data);
       return data;
     });
   const state = useState(fetchResource);
 
-  const columns = React.useMemo(
-    () => [
-      {
-        Header: 'ID',
-        accessor: 'companyPriorityId',
-      },
-      {
-        Header: 'Company',
-        accessor: 'company',
-      },
-      {
-        Header: 'Priority',
-        accessor: 'priority',
-      },
-    ],
-    []
-  )
-
+  const columns = [
+    {
+      Header: 'Company',
+      accessor: 'company',
+      filter: 'fuzzyText',
+      canResize: false
+      // aggregate: 'count',
+      // Aggregated: ({ cell: { value } }: CellProps<PersonData>) => `${value} Names`,
+    },
+    {
+      Header: 'Priority',
+      accessor: 'priority',
+      isSorted: true,
+      isSortedDesc: false,
+      width: 50,
+      canResize: false
+      // aggregate: 'uniqueCount',
+      // filter: 'fuzzyText',
+      // Aggregated: ({ cell: { value } }: CellProps<PersonData>) => `${value} Unique Names`,
+    },
+  ];
   if (state.promised) {
     return (
         <p>Loading...</p>
@@ -150,7 +298,14 @@ export const CompanyPriorityListComponent = () => {
 
   return (
     <div>
-      <Table columns={columns} data={companyPriority.get()} />
+      <Table<CompanyPriorityData>
+        name={'testTable'}
+        columns={columns}
+        data={companyPriority.get()}
+        // onAdd={}
+        // onEdit={}
+        // onDelete={}
+      />
     </div>
   );
 }
